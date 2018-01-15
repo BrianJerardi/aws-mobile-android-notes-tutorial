@@ -33,6 +33,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +41,8 @@ import android.view.ViewGroup;
 import com.amazonaws.mobile.samples.mynotes.data.Note;
 import com.amazonaws.mobile.samples.mynotes.data.NoteViewHolder;
 import com.amazonaws.mobile.samples.mynotes.data.NotesContentContract;
+import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
 
 /**
  * An activity representing a list of Notes. This activity
@@ -141,6 +144,17 @@ public class NoteListActivity
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 final NoteViewHolder noteHolder = (NoteViewHolder) viewHolder;
                 ((NotesAdapter) notesList.getAdapter()).remove(noteHolder);
+
+                Log.d("NoteListActivity", "Deleted Note");
+
+                // Send Custom Event to Amazon Pinpoint
+                final AnalyticsClient mgr = AWSProvider.getInstance()
+                        .getPinpointManager()
+                        .getAnalyticsClient();
+                final AnalyticsEvent evt = mgr.createEvent("DeleteNote")
+                        .withAttribute("noteId", noteHolder.getNote().getNoteId());
+                mgr.recordEvent(evt);
+                mgr.submitEvents();
             }
 
             @Override
